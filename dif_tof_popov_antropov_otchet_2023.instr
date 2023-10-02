@@ -1,0 +1,174 @@
+/********************************************************************************
+* 
+* McStas, neutron ray-tracing package
+*         Copyright (C) 1997-2008, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+* 
+* This file was written by McStasScript, which is a 
+* python based McStas instrument generator written by 
+* Mads Bertelsen in 2019 while employed at the 
+* European Spallation Source Data Management and 
+* Software Centre
+* 
+* Instrument dif_tof
+* 
+* %Identification
+* Written by: Python McStas Instrument Generator
+* Date: 17:46:39 on August 14, 2023
+* Origin: ESS DMSC
+* %INSTRUMENT_SITE: Generated_instruments
+* 
+* 
+* %Parameters
+* 
+* %End 
+********************************************************************************/
+
+DEFINE INSTRUMENT dif_tof (sample_angle = 1
+)
+
+DECLARE 
+%{
+%}
+
+INITIALIZE 
+%{
+// Start of initialize for generated dif_tof
+%}
+
+TRACE 
+COMPONENT origin = Progress_bar()
+AT (0, 0, 0) ABSOLUTE
+
+COMPONENT source = Source_gen(
+ dist = 0.1, focus_xw = 0.03,
+ focus_yh = 0.03, lambda0 = 9,
+ dlambda = 8.905, I1 = 2.5602E+11,
+ yheight = 0.06, xwidth = 0.04,
+ T1 = 111.69, T2 = 323.18,
+ I2 = 1.11E+11, T3 = 38.48,
+ I3 = 2.6156E+11)
+AT (0,0,0) RELATIVE PREVIOUS
+
+COMPONENT guide_start = Guide_gravity(
+ w1 = 0.03, h1 = 0.03,
+ w2 = 0.03, h2 = 0.03,
+ l = 1.5, m = 2.5)
+AT (0,0,0) RELATIVE PREVIOUS
+
+COMPONENT Ch1 = DiskChopper(
+ theta_0 = 20, radius = 0.5,
+ yheight = 0, nu = 10,
+ nslit = 2, isfirst = 1,
+ n_pulse = 5, phase = -3)
+AT (0,0,1.5) RELATIVE PREVIOUS
+
+COMPONENT guide_1 = Guide_gravity(
+ w1 = 0.03, h1 = 0.03,
+ w2 = 0.03, h2 = 0.03,
+ l = 5, m = 2.5)
+AT (0,0,0) RELATIVE PREVIOUS
+
+COMPONENT Ch2 = DiskChopper(
+ theta_0 = 45.3674, radius = 0.5,
+ yheight = 0, nu = 10,
+ nslit = 2, isfirst = 0,
+ n_pulse = 0, phase = -160)
+AT (0,0,5) RELATIVE PREVIOUS
+
+COMPONENT Ch3 = DiskChopper(
+ theta_0 = 45.3674, radius = 0.5,
+ yheight = 0, nu = 10,
+ nslit = 2, isfirst = 0,
+ n_pulse = 0, phase = -160)
+AT (0,0,0) RELATIVE PREVIOUS
+ROTATED (0, 0, 180) RELATIVE PREVIOUS
+
+COMPONENT guide_2 = Guide_gravity(
+ w1 = 0.03, h1 = 0.03,
+ w2 = 0.03, h2 = 0.03,
+ l = 5, m = 2.5)
+AT (0,0,0) RELATIVE PREVIOUS
+
+COMPONENT Ch4 = DiskChopper(
+ theta_0 = 45.3674, radius = 0.5,
+ yheight = 0, nu = 10,
+ nslit = 2, isfirst = 0,
+ n_pulse = 0, phase = -175)
+AT (0,0,5) RELATIVE PREVIOUS
+
+COMPONENT Ch5 = DiskChopper(
+ theta_0 = 45.3674, radius = 0.5,
+ yheight = 0, nu = 10,
+ nslit = 2, isfirst = 0,
+ n_pulse = 0, phase = -175)
+AT (0,0,0) RELATIVE PREVIOUS
+ROTATED (0, 0, 180) RELATIVE PREVIOUS
+
+COMPONENT Mon_source_lambda = L_monitor(
+ nL = 250, xwidth = 0.1,
+ yheight = 0.1, Lmin = 0,
+ Lmax = 20, restore_neutron = 1)
+AT (0,0,0.1) RELATIVE PREVIOUS
+
+COMPONENT monitor_ndt = Monitor_nD(
+ xwidth = 0.1, yheight = 0.1,
+ restore_neutron = 1, options = "t limits =[0 0.1] bins = 1000")
+AT (0, 0,0) RELATIVE PREVIOUS
+
+COMPONENT guide_3 = Guide_gravity(
+ w1 = 0.03, h1 = 0.03,
+ w2 = 0.03, h2 = 0.03,
+ l = 15, m = 2.5)
+AT (0,0,0) RELATIVE PREVIOUS
+
+COMPONENT monitor_dxy_out = Monitor_nD(
+ xwidth = 0.03, yheight = 0.03,
+ options = "dx limits=[-1 1] bins=100 dy limits=[-1 1] bins=100")
+AT (0, 0,15.1) RELATIVE PREVIOUS
+
+COMPONENT monitor_xy_out = Monitor_nD(
+ xwidth = 0.03, yheight = 0.03,
+ options = "x limits=[-0.02 0.02] bins=100 y limits=[-0.02 0.02] bins=100")
+AT (0, 0,0) RELATIVE PREVIOUS
+
+COMPONENT Arm_sample = Arm()
+AT (0, 0, 1.05) RELATIVE PREVIOUS
+/*
+COMPONENT mirror = Mirror(
+    xwidth=0.1, 
+    yheight=0.1, 
+    m=6, 
+    center=1)
+AT (0, 0, 0) RELATIVE Arm_sample
+ROTATED (90-sample_angle, 0, 90) RELATIVE PREVIOUS
+*/
+COMPONENT powdern = PowderN(
+    reflections="Al.laz", 
+    radius=0.05, 
+    yheight=0.1)
+AT (0, 0, 0) RELATIVE Arm_sample
+ROTATED (-sample_angle, 0, 0) RELATIVE PREVIOUS
+
+COMPONENT Detector = Monitor_nD(
+    yheight=0.5, 
+    radius=0.5, 
+    options="banana theta limits = [-170 -10] bins = 480 lambda limits = [0 6]] bins 120")
+AT (0, 0, 0) RELATIVE Arm_sample
+
+/*
+
+COMPONENT psd_monitor_4pi_spin = PSD_monitor_4PI_spin(
+    radius=0.5, 
+    restore_neutron=1)
+AT (0, 0, 0) RELATIVE PREVIOUS
+
+*/
+
+FINALLY 
+%{
+// Start of finally for generated dif_tof
+%}
+
+END
