@@ -1,0 +1,199 @@
+/*******************************************************************************
+* Instrument: <instrument name>
+*
+* %I
+* Written by: <your name (email)>
+* Date: <current date>
+* Origin: <your institution>
+* %INSTRUMENT_SITE: Templates
+*
+* <instrument short description>
+*
+* %D
+* <instrument description>
+*
+* Example: <parameters=values>
+*
+* %P
+* <parameter1>: [<unit>] <parameter1 description>
+* ...
+*
+* %L
+* <reference/HTML link>
+*
+* %E
+*******************************************************************************/
+DEFINE INSTRUMENT template_simple(lam_min = 1.8, lam_max = 9.0, Lcol = 5, ch2_delay = 40.0, ch2_width = 140.0, sph_R = 80.0, sph_dR = 0, ring_num = 1)
+
+DECLARE
+%{
+double T1 = 98.3, I1 = 2.64e11,T2 = 303.1, I2 = 1.19e11,T3 = 29.9, I3 = 3.1e11; // CM spectrum parameters from Kovalenko data and Pavlov approximation; I already normalized to sr
+double source_w = 0.04, source_h = 0.04, beam_w = 0.03, mod_to_cap_length = 0.5;
+double T, t, source_freq = 40.0, source_pulse_number = 1, pulse_length = 500.0;
+double slit1_w = 0.03, slit2_w = 0.015;
+double ring_thick = 0.01, r_in, r_out;
+
+%}
+
+INITIALIZE
+%{
+r_in = 0.02 + (ring_num - 1) * ring_thick;
+r_out = 0.02 + ring_num * ring_thick;
+printf("R_in = %lf\n", r_in);
+printf("R_out = %lf\n", r_out);
+%}
+
+TRACE
+
+COMPONENT origin = Progress_bar()
+AT (0, 0, 0) RELATIVE ABSOLUTE
+
+COMPONENT Source = Source_gen(
+    dist=mod_to_cap_length, 
+    focus_xw=beam_w, 
+    focus_yh=beam_w, 
+    I1=I1, T1 = T1, I2 = I2, T2 = T2, I3=I3, T3 = T3,
+    yheight=source_h, 
+    xwidth=source_w,
+    Lmin=lam_min, 
+    Lmax=lam_max)
+AT (0, 0, 0) RELATIVE origin
+EXTEND  
+%{  
+T = floor(rand01()*source_pulse_number);  
+t = rand01()*pulse_length*1e-6 + T*1/source_freq;
+%}
+
+COMPONENT Optics_start = Arm()
+AT (0, 0, mod_to_cap_length) RELATIVE Source
+
+	COMPONENT mon_sou = Monitor_nD(
+	    xwidth=0.03, 
+	    yheight=0.03, 
+	    options="lambda limits = [0 15] bins = 150")
+	AT (0, 0, 0) RELATIVE Optics_start
+
+COMPONENT Guide2 = Guide_gravity(
+    w1 = beam_w, h1 = beam_w, w2 = beam_w, h2 = beam_w, l = 4.498,
+    R0 = 0.99, Qc = 0.0218, m = 1.0)
+  AT (0, 0, 0.001) RELATIVE Optics_start
+/*
+*/
+
+COMPONENT Ch2 = DiskChopper(
+    theta_0 = ch2_width, radius = 0.3, yheight = 0, nu = source_freq,
+    nslit = 1, isfirst = 0, phase = ch2_delay + ch2_width / 2.0)
+  AT (0, 0, 4.5) RELATIVE Optics_start
+
+	COMPONENT mon_spec = Monitor_nD(
+	    xwidth=0.03, 
+	    yheight=0.03, 
+	    options="lambda limits = [0 15] bins = 75")
+	AT (0, 0, 0.0001) RELATIVE Ch2
+
+COMPONENT Det_TOF = Monitor_nD(
+	    xwidth = 1.0, yheight = 1.0, restore_neutron = 1,
+	    options = "t limits = [0 0.15] bins = 75 lambda limits = [1 13] bins = 60")
+AT (0, 0, 0) RELATIVE mon_spec
+
+COMPONENT Guide3 = Guide_gravity(
+    w1 = beam_w, h1 = beam_w, w2 = beam_w, h2 = beam_w, l = 5.0 - Lcol,
+    R0 = 0.99, Qc = 0.0218, m = 1.0)
+  AT (0, 0, 0.01) RELATIVE Ch2
+
+
+COMPONENT Slit1 = Slit(
+    xwidth = slit1_w, yheight = slit1_w)
+  AT (0, 0, 5.02 - Lcol) RELATIVE Ch2
+
+
+COMPONENT Slit2 = Slit(
+    xwidth = slit2_w, yheight = slit2_w)
+  AT (0, 0, Lcol) RELATIVE Slit1
+/*
+	COMPONENT mon_sam = Monitor_nD(
+	    xwidth=0.01, 
+	    yheight=0.01, 
+	    options="lambda limits = [0 15] bins = 150")
+	AT (0, 0, 0.1) RELATIVE Slit2
+*/
+
+/*	
+	COMPONENT Sample_mon = Monitor_nD(
+	    xwidth = 0.05, yheight = 0.05, restore_neutron = 1,
+	    options = "x bins = 50 y bins = 50")
+	  AT (0, 0, 1.001) RELATIVE Slit2
+
+	COMPONENT Sample_dxdy = Monitor_nD(
+	    xwidth = 0.05, yheight = 0.05, restore_neutron = 1,
+	    options = "dx limits = [-0.4 0.4] bins = 40 dy limits = [-0.4 0.4] bins = 40")
+	  AT (0, 0, 0) RELATIVE PREVIOUS
+
+	COMPONENT Sample_lam = Monitor_nD(
+	    xwidth = 0.05, yheight = 0.05, restore_neutron = 1,
+	    options = "lambda limits = [1 13] bins = 96")
+	  AT (0, 0, 0) RELATIVE PREVIOUS
+
+	COMPONENT Det_TOF = Monitor_nD(
+	    xwidth = 1.0, yheight = 1.0, restore_neutron = 1,
+	    options = "t limits = [0 0.15] bins = 75 lambda limits = [1 13] bins = 60")
+	  AT (0, 0, 6.0 + 1e-3) RELATIVE Slit2
+*/
+
+SPLIT COMPONENT Sample_spheres = SANSSpheres(
+	R = sph_R, dR= sph_dR, Concentration = 0.01, DeltaRho = 1.0e-14, AbsorptionCrosssection = 0.0, 
+	xwidth = 0.02, yheight = 0.02, zdepth = 0.01, SampleToDetectorDistance = 5.0,
+	DetectorRadius = 0.5)
+  AT (0, 0, 0.01) RELATIVE Slit2
+
+COMPONENT Det1_pos = Arm()
+AT (0, 0, 1.0) RELATIVE Sample_spheres
+
+COMPONENT Det2_pos = Arm()
+AT (0, 0, 5.0) RELATIVE Sample_spheres
+
+COMPONENT Hole = Beamstop(
+    radius=r_in)
+AT (0, 0, 0) RELATIVE Det2_pos
+
+COMPONENT Outer = Slit(
+    radius=r_out)
+AT (0, 0, 1e-6) RELATIVE Det2_pos
+
+	COMPONENT Ring_xy = Monitor_nD(
+	    xwidth=1.0, 
+	    yheight=1.0, restore_neutron=1,
+	    options="x limits = [-0.5 0.5] bins = 250 y limits = [-0.5 0.5] bins = 250")
+	AT (0, 0, 1e-4) RELATIVE Det2_pos
+
+	COMPONENT Ring_tof = Monitor_nD(
+	    xwidth=r_out * 2.0, 
+	    yheight=r_out * 2.0, 
+	    options="t limits = [0 0.05] bins=100")
+	AT (0, 0, 1e-4) RELATIVE Det2_pos
+
+/*
+COMPONENT Det = TOFSANSdet(
+plength=0.00286, ssdist=24.0, coldis = 5.0, Sthckn = 1.0,
+ds1=1.0,  xw1=0.0, yh1=0.0, hl1=0.0,              
+ds2=5.0,  xw2=0.0, yh2=0.0, hl2=0.0,
+ds3=10.0, xw3=1.0, yh3=1.0, hl3=0.04,
+vx3=0.0,
+tmin=0.005, tmax=0.15,
+Nx=128.0, Ny=128.0, Nt=500.0,                      
+qmin=0.00125, qmax=0.013, // Nq=500.0, <<<<<<<<<<<<<<<<< defined above
+rstneu = 0.0,
+centol = 0.1, inttol = 0.0001, qcal=1.0, fname = "TOFSANS.q")
+  AT (0, 0, 0.01) RELATIVE Slit2
+
+COMPONENT Det_TOF = Monitor_nD(
+    xwidth = 1.0, yheight = 1.0, restore_neutron = 1,
+    options = "x limits = [-0.5 0.5] bins = 200 y limits = [-0.5 0.5] bins = 200 t limits = [0 0.025] bins = 50")
+  AT (0, 0, 5.0 + 1e-3) RELATIVE Slit2
+*/
+
+FINALLY
+%{
+%}
+
+END
