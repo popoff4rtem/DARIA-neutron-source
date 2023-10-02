@@ -1,0 +1,210 @@
+/********************************************************************************
+* 
+* McStas, neutron ray-tracing package
+*         Copyright (C) 1997-2008, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+* 
+* This file was written by McStasScript, which is a 
+* python based McStas instrument generator written by 
+* Mads Bertelsen in 2019 while employed at the 
+* European Spallation Source Data Management and 
+* Software Centre
+* 
+* Instrument chopper_tests
+* 
+* %Identification
+* Written by: Python McStas Instrument Generator
+* Date: 13:11:15 on August 02, 2023
+* Origin: ESS DMSC
+* %INSTRUMENT_SITE: Generated_instruments
+* 
+* 
+* %Parameters
+* 
+* %End 
+********************************************************************************/
+
+DEFINE INSTRUMENT chopper_tests (sample_angle=2
+)
+
+DECLARE 
+%{
+%}
+
+INITIALIZE 
+%{
+// Start of initialize for generated chopper_tests
+%}
+
+TRACE 
+COMPONENT origin = Progress_bar()
+AT (0, 0, 0) ABSOLUTE
+
+COMPONENT source = Source_gen(
+ dist = 0.1, focus_xw = 0.01,
+ focus_yh = 0.06, lambda0 = 10,
+ dlambda = 9.905, I1 = 2.5602E+11,
+ yheight = 0.06, xwidth = 0.04,
+ T1 = 111.69, T2 = 323.18,
+ I2 = 1.11E+11, T3 = 38.48,
+ I3 = 2.6156E+11)
+AT (0,0,0) RELATIVE PREVIOUS
+
+COMPONENT monitor_nd_source = Monitor_nD(
+ xwidth = 0.1, yheight = 0.1,
+ options = "lambda limits=[0 18] bins=100")
+AT (0, 0, 0.101) RELATIVE PREVIOUS
+
+COMPONENT Ch1 = DiskChopper(
+ theta_0 = 4, radius = 0.5,
+ yheight = 0, nu = 12.5,
+ nslit = 2, isfirst = 1,
+ n_pulse = 5)
+AT (0,0,0) RELATIVE PREVIOUS
+
+COMPONENT monitor_ndt_in = Monitor_nD(
+ xwidth = 0.1, yheight = 0.1,
+ restore_neutron = 1, options = "t limits =[0 0.02] bins = 120")
+AT (0, 0,0) RELATIVE PREVIOUS
+
+COMPONENT guide = Guide_gravity(
+ w1 = 0.01, h1 = 0.06,
+ w2 = 0.01, h2 = 0.06,
+ l = 10, m = 2.5)
+AT (0,0,0.001) RELATIVE PREVIOUS
+
+COMPONENT Ch2 = DiskChopper(
+ theta_0 = 45.3674, radius = 0.5,
+ yheight = 0, nu = 12.5,
+ nslit = 2, isfirst = 0,
+ n_pulse = 0, phase = -112)
+AT (0,0,10) RELATIVE PREVIOUS
+
+COMPONENT Mon_source_lambda = L_monitor(
+ nL = 250, xwidth = 0.1,
+ yheight = 0.1, Lmin = 0,
+ Lmax = 18, restore_neutron = 1)
+AT (0,0,0.1) RELATIVE PREVIOUS
+
+COMPONENT Mon_source_lambdaEXTENDED = L_monitor(
+ nL = 250, xwidth = 0.1,
+ yheight = 0.1, Lmin = 3.5,
+ Lmax = 8.5, restore_neutron = 1)
+AT (0,0,0) RELATIVE PREVIOUS
+
+COMPONENT monitor_dxy_out = Monitor_nD(
+ xwidth = 0.01, yheight = 0.06,
+ options = "dx limits=[-2.5 2.5] bins=100 dy limits=[-2.5 2.5] bins=100")
+AT (0, 0,0) RELATIVE PREVIOUS
+
+COMPONENT monitor_xy_out = Monitor_nD(
+ xwidth = 0.01, yheight = 0.06,
+ options = "x limits=[-0.01 0.01] bins=100 y limits=[-0.03 0.03] bins=100")
+AT (0, 0,0) RELATIVE PREVIOUS
+
+COMPONENT monitor_ndt = Monitor_nD(
+ xwidth = 0.1, yheight = 0.1,
+ restore_neutron = 1, options = "t limits =[0 0.2] bins = 12000")
+AT (0, 0,0) RELATIVE PREVIOUS
+
+COMPONENT Col1 = Collimator_linear(
+    yheight=0.1, 
+    divergence=1
+)
+AT (0, 0, 0.1) RELATIVE PREVIOUS
+
+COMPONENT Col2 = Collimator_linear(
+    yheight=0.1, 
+    divergence=1
+)
+AT (0, 0, 0.31) RELATIVE PREVIOUS
+
+COMPONENT monitor_dxy_out_col = Monitor_nD(
+ xwidth = 0.01, yheight = 0.1,
+ options = "dx limits=[-0.25 0.25] bins=100 dy limits=[-1 1] bins=100")
+AT (0, 0, 0.31) RELATIVE PREVIOUS
+
+
+/*
+COMPONENT monitor_xy_out_col = Monitor_nD(
+ xwidth = 0.01, yheight = 0.1,
+ options = "x limits=[-0.01 0.01] bins=100 y limits=[-0.035 0.035] bins=100")
+AT (0, 0, 0) RELATIVE PREVIOUS
+*/
+
+
+COMPONENT Arm_sample = Arm()
+AT (0, 0, 1.05) RELATIVE PREVIOUS
+
+COMPONENT mirror = Mirror(
+    xwidth=1.0, 
+    yheight=0.1, 
+    m=5, 
+    center=1)
+AT (0, 0, 0) RELATIVE Arm_sample
+ROTATED (0, 90.0+sample_angle, 0) RELATIVE PREVIOUS
+
+COMPONENT Arm_scatter = Arm()
+AT (0, 0, 0) RELATIVE Arm_sample
+ROTATED (0, 2*sample_angle, 0) RELATIVE Arm_sample
+
+COMPONENT Detector = Monitor_nD(
+    xwidth=0.01, 
+    yheight=0.12, 
+    restore_neutron=1, 
+    options="x limits=[-0.01 0.01] bins=100 y limits=[-0.035 0.035] bins=100", 
+    filename="detect")
+AT (0, 0, 3.0) RELATIVE Arm_scatter
+
+COMPONENT Mon_source_lambda_refl = L_monitor(
+    nL=100, 
+    filename="sample", 
+    xwidth=0.02, 
+    yheight=0.1, 
+    Lmin=0, 
+    Lmax=12, 
+    restore_neutron=1)
+AT (0, 0, 0.01) RELATIVE PREVIOUS
+
+COMPONENT toflambda_monitor = TOFLambda_monitor(
+    tmin=0, 
+    tmax=120000, 
+    xwidth=0.1, 
+    yheight=0.1, 
+    Lmin=3.5, 
+    Lmax=8.5, 
+    restore_neutron=1)
+AT (0, 0, 0) RELATIVE PREVIOUS
+
+COMPONENT tof_psd_monitor_rad = TOF_PSD_monitor_rad(
+    tmin=0, 
+    tmax=120000, 
+	rmax=0.5,
+    restore_neutron=1)
+AT (0, 0, 0) RELATIVE PREVIOUS
+/*
+COMPONENT Detector_radial = Monitor_nD(
+    yheight=0.5, 
+    radius=1, 
+    options="banana theta limits = [-10 90] bins = 480 lambda limits = [2 9]] bins 120")
+AT (0, 0, -1) RELATIVE PREVIOUS
+*/
+/*
+COMPONENT psd_monitor_tof = PSD_monitor_TOF(
+
+    restore_neutron=1, 
+    xwidth=0.35, 
+    yheight=0.35, 
+tmin=0, 
+    tmax=40000)
+AT (0, 0, 0) RELATIVE PREVIOUS
+*/
+
+
+FINALLY 
+%{
+// Start of finally for generated chopper_tests
+%}
+
+END
