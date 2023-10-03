@@ -1,0 +1,247 @@
+/*******************************************************************************
+* Instrument: <instrument name>
+*
+* %I
+* Written by: <your name (email)>
+* Date: <current date>
+* Origin: <your institution>
+* %INSTRUMENT_SITE: Templates
+*
+* <instrument short description>
+*
+* %D
+* <instrument description>
+*
+* Example: <parameters=values>
+*
+* %P
+* <parameter1>: [<unit>] <parameter1 description>
+* ...
+*
+* %L
+* <reference/HTML link>
+*
+* %E
+*******************************************************************************/
+DEFINE INSTRUMENT template_body_simple(w = 0.1, lambda = 1.5, a1=1, a2=1, sample_angle, ch_nu=20, ch_theta=4,
+guide_width=0.05, guide_height=0.12, m_top=2, m_right=2, m_left=2, guide_pol_lenght=1.21)
+
+DECLARE
+%{
+double l_guide;
+%}
+
+INITIALIZE
+%{
+l_guide=10-guide_pol_lenght;
+%}
+
+TRACE
+
+COMPONENT origin = Progress_bar()
+AT (0, 0, 0) RELATIVE ABSOLUTE
+
+COMPONENT source_gen = Source_gen(
+    dist=2, 
+    focus_xw=0.005, 
+    focus_yh=w, 
+    yheight=0.12, 
+    xwidth=0.01,
+    I1=1e12, 
+    T1=300,
+    Lmin = 0.2,
+    Lmax =20
+)
+AT (0, 0, 0) RELATIVE PREVIOUS
+
+COMPONENT Ch1 = DiskChopper(
+    theta_0=ch_theta, 
+    yheight=0, 
+    nu=ch_nu, 
+    isfirst=1, 
+    n_pulse=2,
+    nslit=2,
+    radius=0.5
+)
+AT (0, 0, 2.01) RELATIVE source_gen
+
+COMPONENT Mon_source = L_monitor(
+    nL=250, 
+    filename="shit3", 
+    xwidth=0.1, 
+    yheight=0.1, 
+    Lmin=0, 
+    Lmax=12, 
+    restore_neutron=1)
+AT (0, 0, 0.01) RELATIVE PREVIOUS
+
+COMPONENT guide_gravity = Guide_gravity(
+    w1=guide_width, 
+    h1=guide_height, 
+    l=l_guide, 
+    mleft=m_left, 
+    mright=m_right, 
+    mtop=m_top, 
+    mbottom=m_top)
+AT (0, 0, 0) RELATIVE PREVIOUS
+
+COMPONENT polorizer = Pol_guide_vmirror(
+    xwidth=guide_width, 
+    yheight=guide_height, 
+    length=guide_pol_lenght,
+    debug=0,
+    rUpPar={1, 0.0219, 0.6, 5, 0.003}, 
+    rDownPar={1, 0.0137, 0, 1.2, 0.001}, 
+    rPar={0.99, 0.02174, 3.6, 3, 0.001})
+AT (0, 0, l_guide+0.01) RELATIVE PREVIOUS
+
+
+COMPONENT Ch2 = DiskChopper(
+    theta_0=45.36735, 
+    yheight=0, 
+    nu=20, 
+    isfirst=0, 
+    n_pulse=0,
+    nslit=2,
+    radius=0.5,
+    phase=-120.5
+)
+AT (0, 0, 10) RELATIVE Ch1
+
+COMPONENT Mon_source_lambda = L_monitor(
+    nL=250, 
+    filename="shit", 
+    xwidth=0.1, 
+    yheight=0.1, 
+    Lmin=0, 
+    Lmax=12, 
+    restore_neutron=1)
+AT (0, 0, 0.01) RELATIVE PREVIOUS
+
+COMPONENT Mon_source_lambdaEXTENDED = L_monitor(
+    nL=250, 
+    filename="shit2", 
+    xwidth=0.1, 
+    yheight=0.1, 
+    Lmin=1, 
+    Lmax=5, 
+    restore_neutron=1)
+AT (0, 0, 0.01) RELATIVE PREVIOUS
+
+COMPONENT monitor_sourceCROSS = Monitor_nD(
+    xwidth=0.12, 
+    yheight=0.12, 
+    restore_neutron=1, 
+    options="x limits =[-0.06 0.06] bins = 120 y limits =[-0.06 0.06] bins = 120")
+AT (0, 0, 0.01) RELATIVE PREVIOUS
+
+COMPONENT meanpollambda_monitor = MeanPolLambda_monitor(
+    xwidth=guide_width, 
+    yheight=guide_height, 
+    nL=100, 
+    filename="file.dat", 
+    my=-1, 
+    Lmin=0.1, 
+    Lmax=10)
+AT (0, 0, guide_pol_lenght+0.002) RELATIVE PREVIOUS
+
+COMPONENT Col1 = Collimator_linear(
+    yheight=0.1, 
+    divergence=a1
+)
+AT (0, 0, 0.01) RELATIVE PREVIOUS
+
+COMPONENT Col2 = Collimator_linear(
+    yheight=0.1, 
+    divergence=a2
+)
+AT (0, 0, 0.31) RELATIVE PREVIOUS
+
+COMPONENT mon_source_lambda_sample = L_monitor(
+    nL=120, 
+    filename="lololo.l", 
+    xwidth=0.12, 
+    yheight=0.12, 
+    Lmin=0, 
+    Lmax=20, 
+    restore_neutron=1)
+AT (0, 0, 1.01) RELATIVE PREVIOUS
+
+
+COMPONENT monitor2_ndt_sample = Monitor_nD(
+    xwidth=0.1, 
+    yheight=0.1, 
+    restore_neutron=1, 
+    options="t limits =[0 0.05] bins = 12000")
+AT (0, 0, 0.01) RELATIVE PREVIOUS
+
+COMPONENT monitor2dxdy_sample = Monitor_nD(
+    xwidth=0.05, 
+    yheight=0.1, 
+    options="dx limits= [-0.025 0.025] bins=50 dy limits=[-0.025 0.025], bins=50")
+AT (0, 0, 0.001) RELATIVE PREVIOUS
+
+COMPONENT Mon_source_lambda_sample = L_monitor(
+    nL=250, 
+    filename="beforesample", 
+    xwidth=0.02, 
+    yheight=0.1, 
+    Lmin=0, 
+    Lmax=12, 
+    restore_neutron=1)
+AT (0, 0, 0.01) RELATIVE PREVIOUS
+
+COMPONENT Arm_sample = Arm()
+AT (0, 0, 1.05) RELATIVE PREVIOUS
+
+COMPONENT mirror = Mirror(
+    xwidth=1.0, 
+    yheight=0.1, 
+    m=6, 
+    center=1)
+AT (0, 0, 0) RELATIVE Arm_sample
+ROTATED (0, 90.0+sample_angle, 0) RELATIVE PREVIOUS
+
+COMPONENT Arm_scatter = Arm()
+AT (0, 0, 0) RELATIVE Arm_sample
+ROTATED (0, 2*sample_angle, 0) RELATIVE Arm_sample
+
+COMPONENT Detector = Monitor_nD(
+    xwidth=0.01, 
+    yheight=0.12, 
+    restore_neutron=1, 
+    options="x limits = [-0.005 0.005]bins 50 y limits = [-0.06 0.06] bins 120", 
+    filename="detect")
+AT (0, 0, 3.0) RELATIVE Arm_scatter
+
+COMPONENT Mon_source_lambda_refl = L_monitor(
+    nL=250, 
+    filename="sample", 
+    xwidth=0.02, 
+    yheight=0.1, 
+    Lmin=0, 
+    Lmax=12, 
+    restore_neutron=1)
+AT (0, 0, 0.01) RELATIVE PREVIOUS
+
+
+
+/*
+COMPONENT monitor_ndt = Monitor_nD(
+    xwidth=0.1, 
+    yheight=0.1, 
+    restore_neutron=1, 
+    options="t limits =[0 0.12] bins = 120")
+AT (0, 0, 15) RELATIVE Ch1
+*/
+
+// insert components here (e.g. Insert -> Source -> ...)
+
+
+
+
+FINALLY
+%{
+%}
+
+END
